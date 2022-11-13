@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "623540594512",
+    "project_id": "todo-flutter-planner",
+    "storage_bucket": "todo-flutter-planner.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623540594512:android:01e7657a51a4d9e5016e55",
+        "android_client_info": {
+          "package_name": "com.example.planner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "623540594512-99hg9u3pqo8e70makpih0ndj1ch5fuk6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNEddqFFcdUyUXRds1_xDucpRRK5X9XBc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "623540594512-99hg9u3pqo8e70makpih0ndj1ch5fuk6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
