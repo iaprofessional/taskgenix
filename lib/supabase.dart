@@ -1,5 +1,6 @@
 import 'package:supabase/supabase.dart';
 import 'package:planner/main.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {}
 
@@ -22,4 +23,13 @@ void LoginUser(email, password) async {
   );
   final user = res.user?.email;
   SaveUserInfo(user);
+}
+
+void SendAsEmail(from, to, todolist) async {
+  var url = Uri.parse("mailto:"+to+"?subject=Taskgenix&body="+todolist.toString());
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url);
+  } else {
+    throw 'Could not launch $url';
+  }
 }
