@@ -4,8 +4,11 @@ import 'package:get_storage/get_storage.dart';
 import 'package:resize/resize.dart';
 import 'package:planner/supabase.dart';
 
-var email = null;
+var email = "null";
 var signedin = "You";
+var task_email = "null";
+var task_array_filled_number = -1;
+
 void main() async {
   await GetStorage.init();
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +23,10 @@ void main() async {
   runApp(MyApp());
 }
 
-void SaveUserInfo(email) {
-  GetStorage().write("signed_in_email", email);
+void SaveUserInfo(mail) {
+  GetStorage().write("signed_in_email", mail);
+  email = GetStorage().read("signed_in_email").toString();
+  signedin = "You";
 }
 
 class MyApp extends StatelessWidget {
@@ -111,7 +116,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
           ElevatedButton(
             onPressed: () {
-              _navigateToNextScreen(context);
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (context) => TodoList()));
             },
             style: style,
             child: Text(
@@ -330,19 +336,20 @@ class _NewPage1State extends State<NewPage1> {
           ),
           SizedBox(height: 0.5),
           Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: TextField(
-                controller: userController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter email id',
-                ),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: TextField(
+              controller: userController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter email id',
               ),
             ),
+          ),
           SizedBox(height: 0.5),
           GFButton(
             onPressed: () {
-              
+              task_email = userController.text;
+              _navigateToNextScreen(context);
             },
             color: Colors.cyan,
             text: "Next",
@@ -351,8 +358,7 @@ class _NewPage1State extends State<NewPage1> {
               color: Colors.white,
             ),
           ),
-        ]
-       ),
+        ]),
       ),
     );
   }
@@ -427,7 +433,9 @@ class _NewPage2State extends State<NewPage2> {
             ),
             SizedBox(height: 0.5),
             GFButton(
-              onPressed: () {},
+              onPressed: () {
+                SendAsEmail(email, task_email, taskdetailsController.text);
+              },
               color: Colors.cyan,
               text: "Assign",
               icon: Icon(
@@ -448,98 +456,6 @@ class _NewPage2State extends State<NewPage2> {
   }
 }
 
-class NewPage3 extends StatefulWidget {
-  const NewPage3({Key? key}) : super(key: key);
-  @override
-  _NewPage3State createState() => _NewPage3State();
-}
-
-class _NewPage3State extends State<NewPage3> {
-  TextEditingController kidnameController = new TextEditingController();
-  @override
-  Widget build(BuildContext context) {
-    final ButtonStyle style = ElevatedButton.styleFrom(
-      textStyle: const TextStyle(fontSize: 14),
-      primary: Colors.redAccent[400],
-    );
-    final ButtonStyle style1 = ElevatedButton.styleFrom(
-      textStyle: const TextStyle(fontSize: 14),
-      primary: Colors.cyanAccent[400],
-    );
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Child details'),
-        backgroundColor: Colors.cyan,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              'Child Name',
-              textScaleFactor: 3,
-              style: TextStyle(color: Colors.cyan),
-            ),
-            SizedBox(height: 0.5),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: TextField(
-                controller: kidnameController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter child name',
-                ),
-              ),
-            ),
-            SizedBox(height: 0.5),
-            GFButton(
-              onPressed: () {
-                if (int.parse(GetStorage().read('kid_number')) == 3) {
-                  showDialog<String>(
-                    context: context,
-                    builder: (BuildContext context) => GFFloatingWidget(
-                      child: GFAlert(
-                        title: 'Error',
-                        content: 'Child limit reached',
-                        bottombar: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              GFButton(
-                                shape: GFButtonShape.pills,
-                                color: Colors.cyan,
-                                child: Text('OK',
-                                    style: TextStyle(color: Colors.black)),
-                                onPressed: () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) => NewPage1()));
-                                },
-                              ),
-                            ]),
-                      ),
-                    ),
-                  );
-                } else {
-                  var kid_number = int.parse(GetStorage().read('kid_number'));
-                  kid_number = kid_number + 1;
-                  var children = GetStorage().write(
-                      'kid_' + kid_number.toString(), kidnameController.text);
-                }
-              },
-              color: Colors.cyan,
-              text: "Submit",
-              icon: Icon(
-                Icons.forward,
-                color: Colors.white,
-              ),
-              shape: GFButtonShape.pills,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class SignInScreen extends StatefulWidget {
   SignInScreen({Key? key}) : super(key: key);
 
@@ -553,6 +469,15 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => MyHomePage()));
+        },
+        backgroundColor: Colors.cyan,
+        tooltip: 'Add Item',
+        child: Icon(Icons.close),
+      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -607,11 +532,8 @@ class _SignInScreenState extends State<SignInScreen> {
               GFButton(
                 onPressed: () {
                   LoginUser(emailController.text, emailpasswordController.text);
-                  setState(() {
-                    email = GetStorage().read("signed_in_email");
-                    signedin = "You";
-                  });
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => MyHomePage()));
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => MyHomePage()));
                 },
                 color: Colors.cyan,
                 text: "Login In",
@@ -626,11 +548,8 @@ class _SignInScreenState extends State<SignInScreen> {
                 onPressed: () {
                   CreateUser(
                       emailController.text, emailpasswordController.text);
-                  setState(() {
-                    email = GetStorage().read("signed_in_email");
-                    signedin = "You";
-                  });
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => MyHomePage()));
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => MyHomePage()));
                 },
                 color: Colors.cyan,
                 text: "Sign Up",
@@ -645,5 +564,211 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       ),
     );
+  }
+}
+
+class TodoList extends StatefulWidget {
+  @override
+  _TodoListState createState() => _TodoListState();
+}
+
+class _TodoListState extends State<TodoList> {
+  // save data
+  final List<String> _todoList = <String>[];
+  // text field
+  final TextEditingController _textFieldController = TextEditingController();
+  //counter
+  int counter = 0;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('To-Do List'),
+        backgroundColor: Colors.cyan,
+      ),
+      body: ListView(children: _getItems()),
+      // add items to the to-do list
+      floatingActionButton: FloatingActionButton(
+          onPressed: () => _displayDialog(context),
+          backgroundColor: Colors.cyan,
+          tooltip: 'Add Item',
+          child: Icon(Icons.add)),
+    );
+  }
+
+  void _addTodoItem(String title) {
+    // Wrapping it inside a set state will notify
+    // the app that the state has changed
+    setState(() {
+      _todoList.add(title);
+      _incrementCounter();
+    });
+    _textFieldController.clear();
+  }
+
+  void _removeTodoItem(String title) {
+    // Wrapping it inside a set state will notify
+    // the app that the state has changed
+    setState(() {
+      _todoList.remove(title);
+      _decrementCounter();
+    });
+    _textFieldController.clear();
+  }
+
+  // this Generate list of item widgets
+  Widget _buildTodoItem(String title) {
+    return ListTile(
+      title: Text(title),
+      onTap: () {
+        _removeTodoItem(title);
+      },
+    );
+  }
+
+  void _incrementCounter() {
+    setState(() {
+      counter++;
+      if(counter == 0) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) => NewPage3()));
+      }
+    });
+  }
+
+  void _decrementCounter() {
+    setState(() {
+      counter--;
+      if(counter == 0) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) => NewPage3()));
+      }
+    });
+  }
+
+  // display a dialog for the user to enter items
+  Future<dynamic> _displayDialog(BuildContext context) async {
+    // alter the app state to show a dialog
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Add a task to your list'),
+            content: TextField(
+              controller: _textFieldController,
+              decoration: const InputDecoration(hintText: 'Enter task here'),
+            ),
+            actions: <Widget>[
+              // add button
+              GFButton(
+                color: Colors.cyan,
+                child: const Text('ADD'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _addTodoItem(_textFieldController.text);
+                },
+              ),
+              GFButton(
+                color: Colors.cyan,
+                child: const Text('CANCEL'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  List<Widget> _getItems() {
+    final List<Widget> _todoWidgets = <Widget>[];
+    for (String title in _todoList) {
+      _todoWidgets.add(_buildTodoItem(title));
+    }
+    return _todoWidgets;
+  }
+}
+
+class NewPage3 extends StatefulWidget {
+  const NewPage3({Key? key}) : super(key: key);
+  @override
+  _NewPage3State createState() => _NewPage3State();
+}
+
+class _NewPage3State extends State<NewPage3> {
+  TextEditingController rewardnameController = new TextEditingController();
+  TextEditingController rewardurlController = new TextEditingController();
+  @override
+  Widget build(BuildContext context) {
+    final ButtonStyle style = ElevatedButton.styleFrom(
+      textStyle: const TextStyle(fontSize: 14),
+      primary: Colors.redAccent[400],
+    );
+    final ButtonStyle style1 = ElevatedButton.styleFrom(
+      textStyle: const TextStyle(fontSize: 14),
+      primary: Colors.cyanAccent[400],
+    );
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Task Details'),
+        backgroundColor: Colors.cyan,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              'Reward Email id',
+              textScaleFactor: 3,
+              style: TextStyle(color: Colors.cyan),
+            ),
+            SizedBox(height: 0.5),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: TextField(
+                controller: rewardnameController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Enter email id',
+                ),
+              ),
+            ),
+            SizedBox(height: 0.5),
+            Text(
+              'Reward link',
+              textScaleFactor: 3,
+              style: TextStyle(color: Colors.cyan),
+            ),
+            SizedBox(height: 0.5),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: TextField(
+                controller: rewardurlController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Enter link',
+                ),
+              ),
+            ),
+            SizedBox(height: 0.5),
+            GFButton(
+              onPressed: () {
+                SendAsEmail(email, rewardnameController.text, rewardurlController.text);
+              },
+              color: Colors.cyan,
+              text: "Assign",
+              icon: Icon(
+                Icons.forward,
+                color: Colors.white,
+              ),
+              shape: GFButtonShape.pills,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToNextScreen(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => MyHomePage()));
   }
 }
