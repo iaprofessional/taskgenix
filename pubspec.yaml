@@ -27,6 +27,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  url_launcher: ^6.1.6
   supabase: ^1.1.1
   resize: ^1.0.0
   get_storage: ^2.0.3
